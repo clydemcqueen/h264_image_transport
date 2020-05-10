@@ -1,0 +1,10 @@
+<library path="h264_image_transport">
+    <class
+            name="image_transport/h264_sub"
+            type="h264_image_transport::H264Subscriber"
+            base_class_type="image_transport::SubscriberPlugin">
+        <description>
+            Decodes h264 video stream.
+        </description>
+    </class>
+</library>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+
+    <name>h264_image_transport</name>
+    <version>0.1.0</version>
+    <description>Plugin to image_transport that uses the ffmpeg h264 codec</description>
+
+    <maintainer email="clyde@mcqueen.net">Clyde McQueen</maintainer>
+    <license>BSD</license>
+
+    <author>Clyde McQueen</author>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <depend>h264_msgs</depend>
+    <depend>image_transport</depend>
+    <depend>pluginlib</depend>
+    <depend>rclcpp</depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+        <image_transport plugin="${prefix}/h264_plugins.xml" />
+    </export>
+</package>

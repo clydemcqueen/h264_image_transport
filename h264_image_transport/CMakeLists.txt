@@ -1,0 +1,80 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(h264_image_transport)
+
+# Default to C++14
+if (NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif ()
+
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif ()
+
+# Emulate colcon in CLion
+if ($ENV{CLION_IDE})
+  message("Running inside CLion")
+  set(h264_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/h264_msgs/share/h264_msgs/cmake")
+  find_package(fastrtps_cmake_module REQUIRED)
+  set(FastRTPS_INCLUDE_DIR "/opt/ros/eloquent/include")
+  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/eloquent/lib/libfastrtps.so")
+endif ()
+
+find_package(ament_cmake REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(h264_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+# Find ffmpeg libraries
+find_package(PkgConfig)
+pkg_check_modules(PC_AVDEVICE REQUIRED libavdevice>=57.10.100)
+pkg_check_modules(PC_AVFORMAT REQUIRED libavformat>=57.83.100)
+pkg_check_modules(PC_AVCODEC REQUIRED libavcodec>=57.107.100)
+pkg_check_modules(PC_AVUTIL REQUIRED libavutil>=55.78.100)
+pkg_check_modules(PC_SWSCALE REQUIRED libswscale>=4.8.100)
+
+add_library(
+  ${PROJECT_NAME} SHARED
+  src/h264_subscriber.cpp
+  src/manifest.cpp
+)
+
+include_directories(
+  include
+)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  ${PC_AVDEVICE_LIBRARIES}
+  ${PC_AVFORMAT_LIBRARIES}
+  ${PC_AVCODEC_LIBRARIES}
+  ${PC_AVUTIL_LIBRARIES}
+  ${PC_SWSCALE_LIBRARIES}
+)
+
+ament_target_dependencies(
+  ${PROJECT_NAME}
+  h264_msgs
+  image_transport
+  rclcpp
+  pluginlib
+  sensor_msgs
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  DIRECTORY include
+  DESTINATION include
+)
+
+pluginlib_export_plugin_description_file(image_transport h264_plugins.xml)
+
+ament_package()
