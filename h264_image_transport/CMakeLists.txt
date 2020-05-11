@@ -63,16 +63,40 @@ ament_target_dependencies(
   sensor_msgs
 )
 
+add_executable(
+  v4l_cam_node
+  src/v4l_cam_node.cpp
+)
+
+ament_target_dependencies(
+  v4l_cam_node
+  h264_msgs
+  rclcpp
+)
+
+target_link_libraries(
+  v4l_cam_node
+  ${PC_AVDEVICE_LIBRARIES}
+  ${PC_AVFORMAT_LIBRARIES}
+  ${PC_AVCODEC_LIBRARIES}
+  ${PC_AVUTIL_LIBRARIES}
+)
+
 install(
-  TARGETS ${PROJECT_NAME}
+  TARGETS ${PROJECT_NAME} v4l_cam_node
   ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib                 # Shared libraries must be in lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME} # Node executables must be in lib/<pkg>
 )
 
 install(
   DIRECTORY include
   DESTINATION include
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 pluginlib_export_plugin_description_file(image_transport h264_plugins.xml)
