@@ -11,6 +11,7 @@ def generate_launch_description():
                 'fps': '30',
                 'size': '800x600',
                 'frame_id': 'camera_frame',
+                'camera_info_path': 'info.ini',
             }]),
 
         # Subscribe to /image_raw/h264, decode, and republish on /repub_raw

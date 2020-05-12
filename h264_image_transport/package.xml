@@ -13,6 +13,7 @@
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
+    <depend>camera_calibration_parsers</depend>
     <depend>h264_msgs</depend>
     <depend>image_transport</depend>
     <depend>pluginlib</depend>

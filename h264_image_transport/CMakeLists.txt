@@ -21,6 +21,7 @@ if ($ENV{CLION_IDE})
 endif ()
 
 find_package(ament_cmake REQUIRED)
+find_package(camera_calibration_parsers REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(h264_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -70,6 +71,7 @@ add_executable(
 
 ament_target_dependencies(
   v4l_cam_node
+  camera_calibration_parsers
   h264_msgs
   rclcpp
 )

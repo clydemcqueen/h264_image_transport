@@ -14,10 +14,19 @@ ros2 launch h264_image_transport example_launch.py
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
-| `input_fn` | string | /dev/video2 | Can be any ffmpeg format |
-| `fps` | string | 30 | Desired frame rate |
-| `size` | string | 800x600 | Width by height |
-| `frame_id` | string | camera_frame | Camera frame ID |
+| input_fn | string | /dev/video2 | Can be any ffmpeg format |
+| fps | string | 30 | Desired frame rate |
+| size | string | 800x600 | Width by height |
+| frame_id | string | camera_frame | Camera frame ID |
+| camera_info_path | string | info.ini | Path to camera info file |
+
+### v4l_cam_node topics
+
+| Topic | Message | Notes |
+|---|---|---|
+| image_raw/h264 | `h264_msgs::msg::Packet` | H264 packet |
+| camera_info | `sensor_msgs::msg::CameraInfo` | Camera info message |
+
 
 ### Requirements
 
