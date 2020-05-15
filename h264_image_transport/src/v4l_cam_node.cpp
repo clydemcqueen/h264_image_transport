@@ -25,6 +25,7 @@ namespace h264_image_transport
     };
 
     Parameters parameters_;
+    int seq_;
     AVInputFormat *input_format_{nullptr};
     AVFormatContext *format_context_{nullptr};
     std::thread cam_thread_;
@@ -130,7 +131,7 @@ namespace h264_image_transport
         camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", QUEUE_SIZE);
         camera_info_msg_.header.frame_id = parameters_.frame_id_;
       } else {
-        RCLCPP_ERROR(get_logger(), "cannot get camera info, will not publish");
+        RCLCPP_ERROR(get_logger(), "Could not get camera info, will not publish");
         camera_info_pub_ = nullptr;
       }
 
@@ -150,9 +151,10 @@ namespace h264_image_transport
             auto stamp = now();
 
             h264_msgs::msg::Packet h264_msg;
-            h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
             h264_msg.header.stamp = stamp;
             h264_msg.header.frame_id = parameters_.frame_id_;
+            h264_msg.seq = seq_++;
+            h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
             h264_pub_->publish(h264_msg);
 
             camera_info_msg_.header.stamp = stamp;

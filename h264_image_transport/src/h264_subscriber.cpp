@@ -6,6 +6,7 @@ namespace h264_image_transport
 
   H264Subscriber::H264Subscriber() :
     logger_(rclcpp::get_logger("H264Subscriber")),
+    seq_(-1),
     p_codec_(),
     p_codec_context_(),
     p_frame_(),
@@ -49,18 +50,41 @@ namespace h264_image_transport
   void H264Subscriber::internalCallback(const h264_msgs::msg::Packet::ConstSharedPtr &message,
                                         const Callback &user_cb)
   {
+    if (seq_ < 0) {
+      RCLCPP_INFO(logger_, "First message: %d", message->seq);
+      std::cout << std::flush;
+    } else {
+      if (message->seq < seq_) {
+        RCLCPP_INFO(logger_, "Drop old message: %d", seq_);
+        std::cout << std::flush;
+        return;
+      }
+      if (message->seq == seq_) {
+        RCLCPP_INFO(logger_, "Drop repeat message: %d", seq_);
+        std::cout << std::flush;
+        return;
+      }
+      if (message->seq > ++seq_) {
+        RCLCPP_INFO(logger_, "Missing message(s): %d-%d", seq_, message->seq - 1);
+        std::cout << std::flush;
+      }
+    }
+    seq_ = message->seq;
+
     packet_.size = message->data.size();
     packet_.data = (uint8_t *) &message->data[0];
 
     // Send packet to decoder
     if (avcodec_send_packet(p_codec_context_, &packet_) < 0) {
-      RCLCPP_ERROR(logger_, "Could not send packet");
+      RCLCPP_INFO(logger_, "Could not send packet");
+      std::cout << std::flush;
       return;
     }
 
     // Get decoded frame
     if (avcodec_receive_frame(p_codec_context_, p_frame_) < 0) {
-      RCLCPP_ERROR(logger_, "Could not receive frame");
+      RCLCPP_INFO(logger_, "Could not receive frame");
+      std::cout << std::flush;
       return;
     }
 
