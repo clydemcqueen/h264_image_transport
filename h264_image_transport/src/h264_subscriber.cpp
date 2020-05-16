@@ -7,6 +7,7 @@ namespace h264_image_transport
   H264Subscriber::H264Subscriber() :
     logger_(rclcpp::get_logger("H264Subscriber")),
     seq_(-1),
+    consecutive_receive_failures_(0),
     p_codec_(),
     p_codec_context_(),
     p_frame_(),
@@ -50,6 +51,7 @@ namespace h264_image_transport
   void H264Subscriber::internalCallback(const h264_msgs::msg::Packet::ConstSharedPtr &message,
                                         const Callback &user_cb)
   {
+    // Report on sequence problems
     if (seq_ < 0) {
       RCLCPP_INFO(logger_, "First message: %d", message->seq);
     } else {
@@ -71,15 +73,21 @@ namespace h264_image_transport
     // Send packet to decoder
     if (avcodec_send_packet(p_codec_context_, &packet_) < 0) {
       RCLCPP_INFO(logger_, "Could not send packet");
-      std::cout << std::flush;
       return;
     }
 
     // Get decoded frame
+    // Failure to decode is common when first starting, avoid spamming the logs
     if (avcodec_receive_frame(p_codec_context_, p_frame_) < 0) {
-      RCLCPP_INFO(logger_, "Could not receive frame");
-      std::cout << std::flush;
+      if (++consecutive_receive_failures_ % 30 == 0) {
+        RCLCPP_INFO(logger_, "Could not receive %d frames", consecutive_receive_failures_);
+      }
       return;
+    }
+
+    if (consecutive_receive_failures_ > 0) {
+      RCLCPP_INFO(logger_, "Could not receive %d frames", consecutive_receive_failures_);
+      consecutive_receive_failures_ = 0;
     }
 
     auto image = std::make_shared<sensor_msgs::msg::Image>();

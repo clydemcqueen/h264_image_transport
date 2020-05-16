@@ -32,7 +32,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
     struct Parameters
     {
       std::string input_fn_;
-      std::string fps_;
+      int fps_;
       std::string size_;
       std::string frame_id_;
       std::string camera_info_path_;
@@ -75,7 +75,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
 
       // Get parameters
       parameters_.input_fn_ = declare_parameter("input_fn", "/dev/video2");
-      parameters_.fps_ = declare_parameter("fps", "30");
+      parameters_.fps_ = declare_parameter("fps", 30);
       parameters_.size_ = declare_parameter("size", "800x600");
       parameters_.frame_id_ = declare_parameter("frame_id", "camera_frame");
       parameters_.camera_info_path_ = declare_parameter("camera_info_path", "info.ini");
@@ -92,7 +92,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
             result.successful = true;
           }
           if (parameter.get_name() == "fps") {
-            parameters_.fps_ = parameter.get_value<std::string>();
+            parameters_.fps_ = parameter.get_value<int>();
             result.successful = true;
           }
           if (parameter.get_name() == "size") {
@@ -126,7 +126,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
       // Set format options, this will allocate an AVDictionary
       AVDictionary *format_options = nullptr;
       av_dict_set(&format_options, "input_format", "h264", 0);
-      av_dict_set(&format_options, "framerate", parameters_.fps_.c_str(), 0);
+      av_dict_set(&format_options, "framerate", std::to_string(parameters_.fps_).c_str(), 0);
       av_dict_set(&format_options, "video_size", parameters_.size_.c_str(), 0);
 
       // Open 4vl device, pass ownership of format_options
