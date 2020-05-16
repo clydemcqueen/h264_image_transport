@@ -52,21 +52,15 @@ namespace h264_image_transport
   {
     if (seq_ < 0) {
       RCLCPP_INFO(logger_, "First message: %d", message->seq);
-      std::cout << std::flush;
     } else {
       if (message->seq < seq_) {
-        RCLCPP_INFO(logger_, "Drop old message: %d", seq_);
-        std::cout << std::flush;
-        return;
+        RCLCPP_INFO(logger_, "Old message: %d", message->seq);
       }
       if (message->seq == seq_) {
-        RCLCPP_INFO(logger_, "Drop repeat message: %d", seq_);
-        std::cout << std::flush;
-        return;
+        RCLCPP_INFO(logger_, "Repeat message: %d", seq_);
       }
-      if (message->seq > ++seq_) {
-        RCLCPP_INFO(logger_, "Missing message(s): %d-%d", seq_, message->seq - 1);
-        std::cout << std::flush;
+      if (message->seq > seq_ + 1) {
+        RCLCPP_INFO(logger_, "Missing message(s): %d-%d", seq_ + 1, message->seq - 1);
       }
     }
     seq_ = message->seq;

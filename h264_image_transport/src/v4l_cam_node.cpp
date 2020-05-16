@@ -11,6 +11,20 @@ extern "C" {
 namespace h264_image_transport
 {
 
+#define RUN_PERF
+#ifdef RUN_PERF
+  #define START_PERF()\
+auto __start__ = std::chrono::high_resolution_clock::now();
+
+#define STOP_PERF(msg)\
+auto __stop__ = std::chrono::high_resolution_clock::now();\
+std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>(__stop__ - __start__).count()\
+  << " microseconds" << std::endl;
+#else
+#define START_PERF()
+#define STOP_PERF(msg)
+#endif
+
   constexpr int QUEUE_SIZE = 10;
 
   class V4LCamNode : public rclcpp::Node
@@ -141,6 +155,10 @@ namespace h264_image_transport
           RCLCPP_INFO(get_logger(), "Camera thread started");
 
           while (!stop_signal_ && rclcpp::ok()) {
+            h264_msgs::msg::Packet h264_msg;
+            h264_msg.header.frame_id = parameters_.frame_id_;
+            h264_msg.seq = seq_++;
+
             // Block until a frame is ready
             AVPacket packet;
             if (av_read_frame(format_context_, &packet) < 0) {
@@ -148,21 +166,24 @@ namespace h264_image_transport
               break;
             }
 
-            auto stamp = now();
+            START_PERF()
 
-            h264_msgs::msg::Packet h264_msg;
-            h264_msg.header.stamp = stamp;
-            h264_msg.header.frame_id = parameters_.frame_id_;
-            h264_msg.seq = seq_++;
+            // Copy to the ROS message and free the packet
             h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
-            h264_pub_->publish(h264_msg);
+            av_packet_unref(&packet);
 
-            camera_info_msg_.header.stamp = stamp;
+            auto stamp = now();
+            h264_msg.header.stamp = stamp;
+            h264_pub_->publish(std::move(h264_msg));
+
             if (camera_info_pub_) {
+              camera_info_msg_.header.stamp = stamp;
               camera_info_pub_->publish(camera_info_msg_);
             }
 
-            av_packet_unref(&packet);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(40));
+
+            STOP_PERF("copy and publish")
           }
 
           // Close v4l device
@@ -174,11 +195,11 @@ namespace h264_image_transport
 
     ~V4LCamNode() override
     {
-      avformat_free_context(format_context_);
       if (cam_thread_.joinable()) {
         stop_signal_ = true;
         cam_thread_.join();
       }
+      avformat_free_context(format_context_);
     }
   };
 
