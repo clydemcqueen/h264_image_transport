@@ -11,7 +11,7 @@ extern "C" {
 namespace h264_image_transport
 {
 
-#define RUN_PERF
+#undef RUN_PERF
 #ifdef RUN_PERF
   #define START_PERF()\
 auto __start__ = std::chrono::high_resolution_clock::now();
@@ -168,22 +168,23 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
 
             START_PERF()
 
+            auto stamp = now();
+
             // Copy to the ROS message and free the packet
-            h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
+            if (h264_pub_->get_subscription_count() > 0) {
+              h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
+              h264_msg.header.stamp = stamp;
+              h264_pub_->publish(std::move(h264_msg));
+            }
+
             av_packet_unref(&packet);
 
-            auto stamp = now();
-            h264_msg.header.stamp = stamp;
-            h264_pub_->publish(std::move(h264_msg));
-
-            if (camera_info_pub_) {
+            if (camera_info_pub_ && camera_info_pub_->get_subscription_count() > 0) {
               camera_info_msg_.header.stamp = stamp;
               camera_info_pub_->publish(camera_info_msg_);
             }
 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(40));
-
-            STOP_PERF("copy and publish")
+            STOP_PERF("Copy and publish")
           }
 
           // Close v4l device
