@@ -27,7 +27,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
 
   constexpr int QUEUE_SIZE = 10;
 
-  class V4LCamNode : public rclcpp::Node
+  class H264CamNode : public rclcpp::Node
   {
     struct Parameters
     {
@@ -51,8 +51,8 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
 
   public:
 
-    V4LCamNode() :
-      Node{"v4l_cam_node"}
+    H264CamNode() :
+      Node{"h264_cam_node"}
     {
       av_register_all();
       avdevice_register_all();
@@ -194,7 +194,7 @@ std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>
         });
     }
 
-    ~V4LCamNode() override
+    ~H264CamNode() override
     {
       if (cam_thread_.joinable()) {
         stop_signal_ = true;
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<h264_image_transport::V4LCamNode>();
+  auto node = std::make_shared<h264_image_transport::H264CamNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
