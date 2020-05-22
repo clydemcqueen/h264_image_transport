@@ -65,19 +65,19 @@ ament_target_dependencies(
 )
 
 add_executable(
-  v4l_cam_node
-  src/v4l_cam_node.cpp
+  h264_cam_node
+  src/h264_cam_node.cpp
 )
 
 ament_target_dependencies(
-  v4l_cam_node
+  h264_cam_node
   camera_calibration_parsers
   h264_msgs
   rclcpp
 )
 
 target_link_libraries(
-  v4l_cam_node
+  h264_cam_node
   ${PC_AVDEVICE_LIBRARIES}
   ${PC_AVFORMAT_LIBRARIES}
   ${PC_AVCODEC_LIBRARIES}
@@ -85,7 +85,7 @@ target_link_libraries(
 )
 
 install(
-  TARGETS ${PROJECT_NAME} v4l_cam_node
+  TARGETS ${PROJECT_NAME} h264_cam_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib                 # Shared libraries must be in lib
   RUNTIME DESTINATION lib/${PROJECT_NAME} # Node executables must be in lib/<pkg>

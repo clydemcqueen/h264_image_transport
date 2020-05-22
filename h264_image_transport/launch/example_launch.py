@@ -5,8 +5,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         # Grab h264 packets from a video4linux camera and publish on /image_raw/h264
-        Node(package='h264_image_transport', node_executable='v4l_cam_node', output='screen',
-             node_name='v4l_cam_node', parameters=[{
+        Node(package='h264_image_transport', node_executable='h264_cam_node', output='screen',
+             node_name='h264_cam_node', parameters=[{
                 'input_fn': '/dev/video2',
                 'fps': '30',
                 'size': '800x600',

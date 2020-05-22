@@ -17,6 +17,8 @@ namespace h264_image_transport
   private:
 
     rclcpp::Logger logger_;
+    int seq_;
+    int consecutive_receive_failures_;
     AVCodec *p_codec_;
     AVCodecContext *p_codec_context_;
     AVFrame *p_frame_;

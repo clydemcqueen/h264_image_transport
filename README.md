@@ -10,7 +10,7 @@ Possible future work: add H264 encoder
 ros2 launch h264_image_transport example_launch.py
 ~~~
 
-### v4l_cam_node parameters
+### h264_cam_node parameters
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -20,7 +20,7 @@ ros2 launch h264_image_transport example_launch.py
 | frame_id | string | camera_frame | Camera frame ID |
 | camera_info_path | string | info.ini | Path to camera info file |
 
-### v4l_cam_node topics
+### h264_cam_node topics
 
 | Topic | Message | Notes |
 |---|---|---|

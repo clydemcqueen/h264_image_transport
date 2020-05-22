@@ -11,20 +11,35 @@ extern "C" {
 namespace h264_image_transport
 {
 
+#undef RUN_PERF
+#ifdef RUN_PERF
+  #define START_PERF()\
+auto __start__ = std::chrono::high_resolution_clock::now();
+
+#define STOP_PERF(msg)\
+auto __stop__ = std::chrono::high_resolution_clock::now();\
+std::cout << msg << " " << std::chrono::duration_cast<std::chrono::microseconds>(__stop__ - __start__).count()\
+  << " microseconds" << std::endl;
+#else
+#define START_PERF()
+#define STOP_PERF(msg)
+#endif
+
   constexpr int QUEUE_SIZE = 10;
 
-  class V4LCamNode : public rclcpp::Node
+  class H264CamNode : public rclcpp::Node
   {
     struct Parameters
     {
       std::string input_fn_;
-      std::string fps_;
+      int fps_;
       std::string size_;
       std::string frame_id_;
       std::string camera_info_path_;
     };
 
     Parameters parameters_;
+    int seq_;
     AVInputFormat *input_format_{nullptr};
     AVFormatContext *format_context_{nullptr};
     std::thread cam_thread_;
@@ -36,8 +51,8 @@ namespace h264_image_transport
 
   public:
 
-    V4LCamNode() :
-      Node{"v4l_cam_node"}
+    H264CamNode() :
+      Node{"h264_cam_node"}
     {
       av_register_all();
       avdevice_register_all();
@@ -60,7 +75,7 @@ namespace h264_image_transport
 
       // Get parameters
       parameters_.input_fn_ = declare_parameter("input_fn", "/dev/video2");
-      parameters_.fps_ = declare_parameter("fps", "30");
+      parameters_.fps_ = declare_parameter("fps", 30);
       parameters_.size_ = declare_parameter("size", "800x600");
       parameters_.frame_id_ = declare_parameter("frame_id", "camera_frame");
       parameters_.camera_info_path_ = declare_parameter("camera_info_path", "info.ini");
@@ -77,7 +92,7 @@ namespace h264_image_transport
             result.successful = true;
           }
           if (parameter.get_name() == "fps") {
-            parameters_.fps_ = parameter.get_value<std::string>();
+            parameters_.fps_ = parameter.get_value<int>();
             result.successful = true;
           }
           if (parameter.get_name() == "size") {
@@ -111,7 +126,7 @@ namespace h264_image_transport
       // Set format options, this will allocate an AVDictionary
       AVDictionary *format_options = nullptr;
       av_dict_set(&format_options, "input_format", "h264", 0);
-      av_dict_set(&format_options, "framerate", parameters_.fps_.c_str(), 0);
+      av_dict_set(&format_options, "framerate", std::to_string(parameters_.fps_).c_str(), 0);
       av_dict_set(&format_options, "video_size", parameters_.size_.c_str(), 0);
 
       // Open 4vl device, pass ownership of format_options
@@ -130,7 +145,7 @@ namespace h264_image_transport
         camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", QUEUE_SIZE);
         camera_info_msg_.header.frame_id = parameters_.frame_id_;
       } else {
-        RCLCPP_ERROR(get_logger(), "cannot get camera info, will not publish");
+        RCLCPP_ERROR(get_logger(), "Could not get camera info, will not publish");
         camera_info_pub_ = nullptr;
       }
 
@@ -140,6 +155,10 @@ namespace h264_image_transport
           RCLCPP_INFO(get_logger(), "Camera thread started");
 
           while (!stop_signal_ && rclcpp::ok()) {
+            h264_msgs::msg::Packet h264_msg;
+            h264_msg.header.frame_id = parameters_.frame_id_;
+            h264_msg.seq = seq_++;
+
             // Block until a frame is ready
             AVPacket packet;
             if (av_read_frame(format_context_, &packet) < 0) {
@@ -147,20 +166,25 @@ namespace h264_image_transport
               break;
             }
 
+            START_PERF()
+
             auto stamp = now();
 
-            h264_msgs::msg::Packet h264_msg;
-            h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
-            h264_msg.header.stamp = stamp;
-            h264_msg.header.frame_id = parameters_.frame_id_;
-            h264_pub_->publish(h264_msg);
-
-            camera_info_msg_.header.stamp = stamp;
-            if (camera_info_pub_) {
-              camera_info_pub_->publish(camera_info_msg_);
+            // Copy to the ROS message and free the packet
+            if (h264_pub_->get_subscription_count() > 0) {
+              h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
+              h264_msg.header.stamp = stamp;
+              h264_pub_->publish(std::move(h264_msg));
             }
 
             av_packet_unref(&packet);
+
+            if (camera_info_pub_ && camera_info_pub_->get_subscription_count() > 0) {
+              camera_info_msg_.header.stamp = stamp;
+              camera_info_pub_->publish(camera_info_msg_);
+            }
+
+            STOP_PERF("Copy and publish")
           }
 
           // Close v4l device
@@ -170,13 +194,13 @@ namespace h264_image_transport
         });
     }
 
-    ~V4LCamNode() override
+    ~H264CamNode() override
     {
-      avformat_free_context(format_context_);
       if (cam_thread_.joinable()) {
         stop_signal_ = true;
         cam_thread_.join();
       }
+      avformat_free_context(format_context_);
     }
   };
 
@@ -186,7 +210,7 @@ int main(int argc, char **argv)
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<h264_image_transport::V4LCamNode>();
+  auto node = std::make_shared<h264_image_transport::H264CamNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
