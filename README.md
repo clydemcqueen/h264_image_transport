@@ -34,7 +34,7 @@ Tested on Ubuntu 18.04 with ROS2 Eloquent.
 
 Requires ffmpeg:
 ~~~
-sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev
 ~~~
 
 Running `ffmpeg` should give library versions that are >= these:
