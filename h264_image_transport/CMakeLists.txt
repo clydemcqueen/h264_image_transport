@@ -3,22 +3,23 @@ cmake_minimum_required(VERSION 3.5)
 project(h264_image_transport)
 
 # Default to C++14
-if (NOT CMAKE_CXX_STANDARD)
+if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
-endif ()
+endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
-endif ()
+endif()
 
 # Emulate colcon in CLion
-if ($ENV{CLION_IDE})
+if($ENV{CLION_IDE})
   message("Running inside CLion")
-  set(h264_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/h264_msgs/share/h264_msgs/cmake")
+  set(h264_msgs_DIR
+    "${PROJECT_SOURCE_DIR}/../../../install/h264_msgs/share/h264_msgs/cmake")
   find_package(fastrtps_cmake_module REQUIRED)
   set(FastRTPS_INCLUDE_DIR "/opt/ros/eloquent/include")
   set(FastRTPS_LIBRARY_RELEASE "/opt/ros/eloquent/lib/libfastrtps.so")
-endif ()
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(camera_calibration_parsers REQUIRED)
@@ -83,6 +84,12 @@ target_link_libraries(
   ${PC_AVCODEC_LIBRARIES}
   ${PC_AVUTIL_LIBRARIES}
 )
+
+# This will load & run linters listed in package.xml
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 install(
   TARGETS ${PROJECT_NAME} h264_cam_node

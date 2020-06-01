@@ -13,6 +13,11 @@
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
+    <test_depend>ament_lint_auto</test_depend>
+
+    <!-- This recursively depends on a set of common linters -->
+    <test_depend>ament_lint_common</test_depend>
+
     <depend>camera_calibration_parsers</depend>
     <depend>ffmpeg</depend>
     <depend>h264_msgs</depend>
