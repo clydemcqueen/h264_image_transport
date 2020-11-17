@@ -17,8 +17,8 @@ if($ENV{CLION_IDE})
   set(h264_msgs_DIR
     "${PROJECT_SOURCE_DIR}/../../../install/h264_msgs/share/h264_msgs/cmake")
   find_package(fastrtps_cmake_module REQUIRED)
-  set(FastRTPS_INCLUDE_DIR "/opt/ros/eloquent/include")
-  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/eloquent/lib/libfastrtps.so")
+  set(FastRTPS_INCLUDE_DIR "/opt/ros/foxy/include")
+  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/foxy/lib/libfastrtps.so")
 endif()
 
 find_package(ament_cmake REQUIRED)

@@ -35,7 +35,7 @@
 #include <utility>
 #include <vector>
 
-#include "camera_calibration_parsers/parse.h"
+#include "camera_calibration_parsers/parse.hpp"
 #include "h264_msgs/msg/packet.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
@@ -70,14 +70,15 @@ class H264CamNode : public rclcpp::Node
   struct Parameters
   {
     std::string input_fn_;
-    int fps_;
+    int fps_{};
     std::string size_;
     std::string frame_id_;
     std::string camera_info_path_;
   };
 
+  OnSetParametersCallbackHandle::SharedPtr on_set_parameters_callback_;
   Parameters parameters_;
-  int seq_;
+  int seq_{};
   AVInputFormat * input_format_{nullptr};
   AVFormatContext * format_context_{nullptr};
   std::thread cam_thread_;
@@ -91,7 +92,8 @@ public:
   H264CamNode()
   : Node{"h264_cam_node"}
   {
-    av_register_all();
+    (void) on_set_parameters_callback_;
+
     avdevice_register_all();
     av_log_set_level(AV_LOG_WARNING);
 
@@ -121,7 +123,9 @@ public:
     restart();
 
     // Register parameters
-    set_on_parameters_set_callback([this](const std::vector<rclcpp::Parameter> & parameters)
+    // Callback is unregistered when on_set_parameters_callback_ goes out of scope
+    on_set_parameters_callback_ = add_on_set_parameters_callback(
+      [this](const std::vector<rclcpp::Parameter> & parameters)
       {
         auto result = rcl_interfaces::msg::SetParametersResult();
         for (const auto & parameter : parameters) {
@@ -218,7 +222,7 @@ public:
           if (h264_pub_->get_subscription_count() > 0) {
             h264_msg.data.insert(h264_msg.data.end(), &packet.data[0], &packet.data[packet.size]);
             h264_msg.header.stamp = stamp;
-            h264_pub_->publish(std::move(h264_msg));
+            h264_pub_->publish(h264_msg);
           }
 
           av_packet_unref(&packet);

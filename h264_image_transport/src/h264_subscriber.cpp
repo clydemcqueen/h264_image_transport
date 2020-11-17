@@ -66,7 +66,6 @@ void H264Subscriber::subscribeImpl(
 
   logger_ = node->get_logger();
   av_init_packet(&packet_);
-  avcodec_register_all();
   av_log_set_level(AV_LOG_WARNING);
 
   p_codec_ = avcodec_find_decoder(AV_CODEC_ID_H264);

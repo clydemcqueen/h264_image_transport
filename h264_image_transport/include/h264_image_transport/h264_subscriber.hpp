@@ -35,7 +35,7 @@
 
 #include <string>
 
-#include "image_transport/simple_subscriber_plugin.h"
+#include "image_transport/simple_subscriber_plugin.hpp"
 #include "h264_msgs/msg/packet.hpp"
 
 extern "C"
