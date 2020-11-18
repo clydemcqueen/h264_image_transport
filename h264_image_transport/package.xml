@@ -19,6 +19,7 @@
     <test_depend>ament_lint_common</test_depend>
 
     <depend>camera_calibration_parsers</depend>
+    <depend>ffmpeg</depend>
     <depend>h264_msgs</depend>
     <depend>image_transport</depend>
     <depend>libavdevice-dev</depend>

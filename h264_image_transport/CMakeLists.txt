@@ -31,11 +31,11 @@ find_package(sensor_msgs REQUIRED)
 
 # Find ffmpeg libraries
 find_package(PkgConfig)
-pkg_check_modules(PC_AVDEVICE REQUIRED libavdevice>=57.10.100)
-pkg_check_modules(PC_AVFORMAT REQUIRED libavformat>=57.83.100)
-pkg_check_modules(PC_AVCODEC REQUIRED libavcodec>=57.107.100)
-pkg_check_modules(PC_AVUTIL REQUIRED libavutil>=55.78.100)
-pkg_check_modules(PC_SWSCALE REQUIRED libswscale>=4.8.100)
+pkg_check_modules(PC_AVDEVICE REQUIRED libavdevice>=58)
+pkg_check_modules(PC_AVFORMAT REQUIRED libavformat>=58)
+pkg_check_modules(PC_AVCODEC REQUIRED libavcodec>=58)
+pkg_check_modules(PC_AVUTIL REQUIRED libavutil>=56)
+pkg_check_modules(PC_SWSCALE REQUIRED libswscale>=5)
 
 add_library(
   ${PROJECT_NAME} SHARED
