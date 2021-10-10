@@ -1,4 +1,4 @@
-// Copyright (c) 2020, Clyde McQueen.
+// Copyright (c) 2021, Clyde McQueen.
 // All rights reserved.
 //
 // Software License Agreement (BSD License 2.0)
@@ -51,7 +51,7 @@ class H264Subscriber : public image_transport::SimpleSubscriberPlugin<h264_msgs:
 {
 private:
   rclcpp::Logger logger_;
-  int seq_;
+  int64_t seq_;
   int consecutive_receive_failures_;
   AVCodec * p_codec_;
   AVCodecContext * p_codec_context_;

@@ -1,4 +1,4 @@
-// Copyright (c) 2020, Clyde McQueen.
+// Copyright (c) 2021, Clyde McQueen.
 // All rights reserved.
 //
 // Software License Agreement (BSD License 2.0)
@@ -104,12 +104,12 @@ void H264Subscriber::internalCallback(
   }
   seq_ = message->seq;
 
-  packet_.size = message->data.size();
+  packet_.size = static_cast<int>(message->data.size());
   packet_.data = const_cast<uint8_t *>(reinterpret_cast<uint8_t const *>(&message->data[0]));
 
   // Send packet to decoder
   if (avcodec_send_packet(p_codec_context_, &packet_) < 0) {
-    RCLCPP_INFO(logger_, "Could not send packet");
+    RCLCPP_INFO(logger_, "Could not send packet %d", seq_);
     return;
   }
 
@@ -135,16 +135,17 @@ void H264Subscriber::internalCallback(
   image->header = message->header;
 
   // Set / update sws context
-  p_sws_context_ =
-    sws_getCachedContext(p_sws_context_, p_frame_->width, p_frame_->height, AV_PIX_FMT_YUV420P,
-      p_frame_->width, p_frame_->height, AV_PIX_FMT_BGR24,
-      SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+  p_sws_context_ = sws_getCachedContext(
+    p_sws_context_, p_frame_->width, p_frame_->height, AV_PIX_FMT_YUV420P,
+    p_frame_->width, p_frame_->height, AV_PIX_FMT_BGR24,
+    SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
   // Copy and convert from YUYV420P to BGR24
   image->data.resize(p_frame_->width * p_frame_->height * 3);
   int stride = 3 * p_frame_->width;
   uint8_t * destination = &image->data[0];
-  sws_scale(p_sws_context_, (const uint8_t * const *) p_frame_->data, p_frame_->linesize, 0,
+  sws_scale(
+    p_sws_context_, (const uint8_t * const *) p_frame_->data, p_frame_->linesize, 0,
     p_frame_->height, &destination, &stride);
 
   user_cb(image);

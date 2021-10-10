@@ -1,4 +1,4 @@
-// Copyright (c) 2020, Clyde McQueen.
+// Copyright (c) 2021, Clyde McQueen.
 // All rights reserved.
 //
 // Software License Agreement (BSD License 2.0)
@@ -70,7 +70,7 @@ class H264CamNode : public rclcpp::Node
   struct Parameters
   {
     std::string input_fn_;
-    int fps_{};
+    int64_t fps_{};
     std::string size_;
     std::string frame_id_;
     std::string camera_info_path_;
@@ -157,8 +157,8 @@ public:
     RCLCPP_INFO_STREAM(get_logger(), "Parameter fps: " << parameters_.fps_);
     RCLCPP_INFO_STREAM(get_logger(), "Parameter size: " << parameters_.size_);
     RCLCPP_INFO_STREAM(get_logger(), "Parameter frame_id: " << parameters_.frame_id_);
-    RCLCPP_INFO_STREAM(get_logger(),
-      "Parameter camera_info_path: " << parameters_.camera_info_path_);
+    RCLCPP_INFO_STREAM(
+      get_logger(), "Parameter camera_info_path: " << parameters_.camera_info_path_);
 
     if (cam_thread_.joinable()) {
       stop_signal_ = true;
@@ -173,8 +173,8 @@ public:
     av_dict_set(&format_options, "video_size", parameters_.size_.c_str(), 0);
 
     // Open 4vl device, pass ownership of format_options
-    if (avformat_open_input(&format_context_, parameters_.input_fn_.c_str(), input_format_,
-      &format_options) < 0)
+    if (avformat_open_input(
+        &format_context_, parameters_.input_fn_.c_str(), input_format_, &format_options) < 0)
     {
       RCLCPP_ERROR_STREAM(get_logger(), "Could not open the v4l device: " << parameters_.input_fn_);
       throw std::runtime_error("Could not open the v4l device");
@@ -186,8 +186,8 @@ public:
     // readCalibration will crash if file_name is ""
     assert(!parameters_.camera_info_path_.empty());
     std::string camera_name;
-    if (camera_calibration_parsers::readCalibration(parameters_.camera_info_path_, camera_name,
-      camera_info_msg_))
+    if (camera_calibration_parsers::readCalibration(
+        parameters_.camera_info_path_, camera_name, camera_info_msg_))
     {
       RCLCPP_INFO(get_logger(), "got camera info for '%s'", camera_name.c_str());
       camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", QUEUE_SIZE);
@@ -200,7 +200,7 @@ public:
     cam_thread_ = std::thread(
       [this]()
       {
-        RCLCPP_INFO(get_logger(), "Camera thread started");
+        RCLCPP_INFO(get_logger(), "Camera thread started");  // NOLINT
 
         while (!stop_signal_ && rclcpp::ok()) {
           h264_msgs::msg::Packet h264_msg;
@@ -210,7 +210,7 @@ public:
           // Block until a frame is ready
           AVPacket packet;
           if (av_read_frame(format_context_, &packet) < 0) {
-            RCLCPP_INFO(get_logger(), "EOS");
+            RCLCPP_INFO(get_logger(), "EOS");  // NOLINT
             break;
           }
 
@@ -238,7 +238,7 @@ public:
         // Close v4l device
         avformat_close_input(&format_context_);
 
-        RCLCPP_INFO(get_logger(), "Camera thread stopped");
+        RCLCPP_INFO(get_logger(), "Camera thread stopped");  // NOLINT
       });
   }
 
