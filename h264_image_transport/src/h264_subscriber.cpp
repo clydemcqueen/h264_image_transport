@@ -136,7 +136,7 @@ void H264Subscriber::internalCallback(
 
   // Set / update sws context
   p_sws_context_ = sws_getCachedContext(
-    p_sws_context_, p_frame_->width, p_frame_->height, AV_PIX_FMT_YUV420P,
+    p_sws_context_, p_frame_->width, p_frame_->height, p_codec_context_->pix_fmt,
     p_frame_->width, p_frame_->height, AV_PIX_FMT_BGR24,
     SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
