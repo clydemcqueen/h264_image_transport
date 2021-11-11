@@ -1,4 +1,4 @@
-## h264_image_transport
+## h264_image_transport ![build status](https://github.com/clydemcqueen/h264_image_transport/actions/workflows/build_test.yml/badge.svg?branch=master)
 
 Adds H264 decoding to [ROS2 image transport](https://index.ros.org/p/image_transport/github-ros-perception-image_common/).
 Also includes a simple node to copy H264 packets from a `video4linux` camera.
