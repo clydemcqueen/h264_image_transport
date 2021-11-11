@@ -8,12 +8,13 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  message(STATUS "GNU or Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 # Emulate colcon in CLion
 if($ENV{CLION_IDE})
-  message("Running inside CLion")
+  message(STATUS "Running inside CLion")
   set(h264_msgs_DIR
     "${PROJECT_SOURCE_DIR}/../../../install/h264_msgs/share/h264_msgs/cmake")
   find_package(fastrtps_cmake_module REQUIRED)
