@@ -90,16 +90,16 @@ void H264Subscriber::internalCallback(
 {
   // Report on sequence problems
   if (seq_ < 0) {
-    RCLCPP_INFO(logger_, "First message: %d", message->seq);
+    RCLCPP_INFO(logger_, "First message: %ld", message->seq);
   } else {
     if (message->seq < seq_) {
-      RCLCPP_INFO(logger_, "Old message: %d", message->seq);
+      RCLCPP_INFO(logger_, "Old message: %ld", message->seq);
     }
     if (message->seq == seq_) {
-      RCLCPP_INFO(logger_, "Repeat message: %d", seq_);
+      RCLCPP_INFO(logger_, "Repeat message: %ld", seq_);
     }
     if (message->seq > seq_ + 1) {
-      RCLCPP_INFO(logger_, "Missing message(s): %d-%d", seq_ + 1, message->seq - 1);
+      RCLCPP_INFO(logger_, "Missing message(s): %ld-%ld", seq_ + 1, message->seq - 1);
     }
   }
   seq_ = message->seq;
@@ -109,7 +109,7 @@ void H264Subscriber::internalCallback(
 
   // Send packet to decoder
   if (avcodec_send_packet(p_codec_context_, &packet_) < 0) {
-    RCLCPP_INFO(logger_, "Could not send packet %d", seq_);
+    RCLCPP_INFO(logger_, "Could not send packet %ld", seq_);
     return;
   }
 
