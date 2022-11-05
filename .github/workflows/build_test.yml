@@ -15,7 +15,6 @@ jobs:
         ros_distribution:
           - foxy
           - galactic
-          - rolling
         include:
           # Foxy Fitzroy (June 2020 - May 2023)
           - docker_image: rostooling/setup-ros-docker:ubuntu-focal-ros-foxy-ros-base-latest
