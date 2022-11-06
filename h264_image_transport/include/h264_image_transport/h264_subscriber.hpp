@@ -35,7 +35,7 @@
 
 #include <string>
 
-#include "image_transport/simple_subscriber_plugin.hpp"
+#include "image_transport/subscriber_plugin.hpp"
 #include "h264_msgs/msg/packet.hpp"
 
 extern "C"
@@ -47,26 +47,40 @@ extern "C"
 namespace h264_image_transport
 {
 
-class H264Subscriber : public image_transport::SimpleSubscriberPlugin<h264_msgs::msg::Packet>
+class H264Subscriber : public image_transport::SubscriberPlugin
 {
 private:
   rclcpp::Logger logger_;
+  rclcpp::Subscription<h264_msgs::msg::Packet>::SharedPtr sub_;
+
   int64_t seq_;
   int consecutive_receive_failures_;
   AVCodec * p_codec_;
   AVCodecContext * p_codec_context_;
   AVFrame * p_frame_;
-  AVPacket packet_;
+  AVPacket * p_packet_;
   SwsContext * p_sws_context_;
 
-protected:
   void internalCallback(
     const h264_msgs::msg::Packet::ConstSharedPtr & message,
-    const Callback & user_cb) override;
+    const Callback & user_cb);
+
+protected:
+  void subscribeImpl(
+    rclcpp::Node * node,
+    const std::string &,
+    const Callback &,
+    rmw_qos_profile_t) override
+  {
+    RCLCPP_FATAL(node->get_logger(), "not used in Humble+");
+  }
 
   void subscribeImpl(
-    rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    rmw_qos_profile_t custom_qos) override;
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const Callback & callback,
+    rmw_qos_profile_t custom_qos,
+    rclcpp::SubscriptionOptions options) override;
 
 public:
   H264Subscriber();
@@ -76,6 +90,27 @@ public:
   std::string getTransportName() const override
   {
     return "h264";
+  }
+
+  std::string getTopic() const override
+  {
+    if (sub_) {
+      return sub_->get_topic_name();
+    }
+    return {};
+  }
+
+  size_t getNumPublishers() const override
+  {
+    if (sub_) {
+      return sub_->get_publisher_count();
+    }
+    return 0;
+  }
+
+  void shutdown() override
+  {
+    sub_.reset();
   }
 };
 

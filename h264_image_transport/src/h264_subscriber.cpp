@@ -47,41 +47,65 @@ H264Subscriber::H264Subscriber()
   p_codec_(),
   p_codec_context_(),
   p_frame_(),
-  packet_(),
+  p_packet_(),
   p_sws_context_() {}
 
 H264Subscriber::~H264Subscriber()
 {
   avcodec_close(p_codec_context_);
   av_free(p_codec_context_);
+  av_packet_free(&p_packet_);
   av_frame_free(&p_frame_);
 }
 
 void H264Subscriber::subscribeImpl(
-  rclcpp::Node * node, const std::string & base_topic,
+  rclcpp::Node * node,
+  const std::string & base_topic,
   const Callback & callback,
-  rmw_qos_profile_t custom_qos)
+  rmw_qos_profile_t custom_qos,
+  rclcpp::SubscriptionOptions options)
 {
-  SimpleSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
-
   logger_ = node->get_logger();
-  av_init_packet(&packet_);
   av_log_set_level(AV_LOG_WARNING);
 
   p_codec_ = avcodec_find_decoder(AV_CODEC_ID_H264);
   if (!p_codec_) {
     RCLCPP_ERROR(logger_, "Could not find ffmpeg h264 codec");
-    throw std::runtime_error("Could not find ffmpeg h264 codec");
+    return;
   }
 
   p_codec_context_ = avcodec_alloc_context3(p_codec_);
+  if (p_codec_context_ == nullptr) {
+    RCLCPP_ERROR(logger_, "Could not alloc codec context");
+    return;
+  }
 
   if (avcodec_open2(p_codec_context_, p_codec_, nullptr) < 0) {
     RCLCPP_ERROR(logger_, "Could not open ffmpeg h264 codec");
-    throw std::runtime_error("Could not open ffmpeg h264 codec");
+    return;
+  }
+
+  p_packet_ = av_packet_alloc();
+  if (p_packet_ == nullptr) {
+    RCLCPP_ERROR(logger_, "Could not alloc packet");
+    return;
   }
 
   p_frame_ = av_frame_alloc();
+  if (p_frame_ == nullptr) {
+    RCLCPP_ERROR(logger_, "Could not alloc frame");
+    return;
+  }
+
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(custom_qos), custom_qos);
+
+  // Subscribe _after_ we have successfully initialized libav
+  sub_ = node->create_subscription<h264_msgs::msg::Packet>(
+    base_topic + "/" + getTransportName(), qos,
+    [this, callback](const typename std::shared_ptr<const h264_msgs::msg::Packet> msg) {
+      internalCallback(msg, callback);
+    },
+    options);
 }
 
 void H264Subscriber::internalCallback(
@@ -104,11 +128,11 @@ void H264Subscriber::internalCallback(
   }
   seq_ = message->seq;
 
-  packet_.size = static_cast<int>(message->data.size());
-  packet_.data = const_cast<uint8_t *>(reinterpret_cast<uint8_t const *>(&message->data[0]));
+  p_packet_->size = static_cast<int>(message->data.size());
+  p_packet_->data = const_cast<uint8_t *>(reinterpret_cast<uint8_t const *>(&message->data[0]));
 
   // Send packet to decoder
-  if (avcodec_send_packet(p_codec_context_, &packet_) < 0) {
+  if (avcodec_send_packet(p_codec_context_, p_packet_) < 0) {
     RCLCPP_INFO(logger_, "Could not send packet %ld", seq_);
     return;
   }
