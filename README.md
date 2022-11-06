@@ -36,21 +36,9 @@ ros2 launch h264_image_transport example_launch.py
 
 ### Requirements
 
-Tested on ROS2 Eloquent (Ubuntu 18.04) and Foxy (Ubuntu 20.04).
+Tested on ROS2 Foxy, Galactic and Humble.
 
-Eloquent libraries:
-* libavdevice>=57.10.100
-* libavformat>=57.83.100
-* libavcodec>=57.107.100
-* libavutil>=55.78.100
-* libswscale>=4.8.100
-
-Foxy libraries:
-* libavdevice>=58
-* libavformat>=58
-* libavcodec>=58
-* libavutil>=56
-* libswscale>=5
+Requires `libavdevice`, `libavformat`, `libavcodec`, `libavutil`, `libswscale`.
 
 Here's one way to satisfy these requirements:
 ~~~
